@@ -13,5 +13,11 @@ boolean SplVehicle;
         return VehicleNo;
     }
 
+    public int getVehicleID() {
+        return VehicleID;
+    }
+
+
+
 
 }

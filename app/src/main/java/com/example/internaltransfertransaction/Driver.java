@@ -11,4 +11,6 @@ public class Driver {
     }
 
     public String getDLNo(){return DLNo;}
+
+    public int getDriverID(){return DriverId;}
 }

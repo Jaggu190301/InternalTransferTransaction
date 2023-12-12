@@ -17,8 +17,10 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
     private List<String> driverNames = new ArrayList<>();
     private List<String> VehicleNo = new ArrayList<>();
     private List<String> Location=new ArrayList<>();
+
+    private Map<String, Integer> driverIds = new HashMap<>();
+    private Map<String, Integer> vehicleIds = new HashMap<>();
     private Button submitButton;
 
     @Override
@@ -53,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         tonnage = findViewById(R.id.tonnage);
         pageRefNo = findViewById(R.id.PageRefNo);
         remarks = findViewById(R.id.Remarks);
+
+
 
         submitButton = findViewById(R.id.Submit);
 
@@ -122,6 +129,9 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     for (Vehicle vehicle : response.body()) {
                         VehicleNo.add(vehicle.getVehicle());
+
+                        // Store the vehicle ID for later use in the POST request
+                        vehicleIds.put(vehicle.getVehicle(), vehicle.getVehicleID());
                     }
 
                     // Set up ArrayAdapter for the MaterialAutoCompleteTextView
@@ -159,6 +169,8 @@ public class MainActivity extends AppCompatActivity {
                     for (Driver driver : response.body()) {
                         String combinedName = driver.getName() + " - " + getLastFourDigits(driver.getDLNo());
                         driverNames.add(combinedName);
+
+                        driverIds.put(combinedName, driver.getDriverID());
                     }
 
                     // Set up ArrayAdapter for the MaterialAutoCompleteTextView
@@ -199,6 +211,57 @@ public class MainActivity extends AppCompatActivity {
         String tonnageValue = tonnage.getText().toString();
         String pageRefNoValue = pageRefNo.getText().toString();
         String remarksValue = remarks.getText().toString();
+
+        int driverId = driverIds.get(selectedDriverName);
+        int vehicleId = vehicleIds.get(VehicleNo);
+
+       //Create Retrofit Instance
+        Retrofit retrofit=new Retrofit.Builder()
+                .baseUrl("https://external.balajitransports.in/api/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                                .build();
+        // Create an instance of the ApiService interface
+        ApiService apiService = retrofit.create(ApiService.class);
+
+        // Create an instance of the data model for the POST request
+        PostDataModel postData = new PostDataModel(
+                driverId,
+                dateValue,
+                vehicleId,
+                fromValue,
+                toValue,
+                coilIDValue,
+                tonnageValue,
+                pageRefNoValue,
+                remarksValue
+        );
+
+        // Make the POST request
+        Call<ApiResponse> call = apiService.postData(postData);
+
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Handle the successful response
+                    ApiResponse apiResponse = response.body();
+                    Toast.makeText(MainActivity.this, "Data submitted successfully: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    // Handle the error response
+                    Log.e("MainActivity", "Failed to submit data to API");
+                    Log.e("MainActivity", "Response Error: " + response.errorBody());
+                    Toast.makeText(MainActivity.this, "Failed to submit data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Log.e("MainActivity", "API request failed", t);
+                Toast.makeText(MainActivity.this, "API request failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
 
         // Display values in the log
         Log.d("MainActivity", "Driver Name: " + selectedDriverName);
@@ -246,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Helper method to update the date TextInputEditText with the selected date
     private void updateDateEditText() {
-        String myFormat = "MM/dd/yyyy"; // Choose the desired date format
+        String myFormat = "dd/MM/yyyy"; // Choose the desired date format
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
 
         date.setText(sdf.format(calendar.getTime()));
