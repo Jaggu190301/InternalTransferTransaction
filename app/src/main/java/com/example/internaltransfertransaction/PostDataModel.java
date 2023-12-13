@@ -3,110 +3,82 @@ package com.example.internaltransfertransaction;
 import com.google.gson.annotations.SerializedName;
 
 public class PostDataModel {
-    @SerializedName("DriverID")
-    private int driverID;
+    private String driverName,date,vehicleNo,from,to,coilID,tonnage,pageRefNo,remarks;
 
-    @SerializedName("Date")
-    private String Date;
-
-    @SerializedName("VehicleID")
-    private int VehicleID;
-
-    @SerializedName("From_Place")
-    private String From_Place;
-
-    @SerializedName("To_Place")
-    private String To_Place;
-
-    @SerializedName("CoilID")
-    private String CoilID;
-
-    @SerializedName("Tonnage")
-    private String Tonnage;
-
-    @SerializedName("PagerefNo")
-    private String PagerefNo;
-
-    @SerializedName("remarks")
-    private String remarks;
-
-    // Constructors, getters, and setters
-
-    public PostDataModel(int DriverID, String date, int vehicleNo, String from, String to,
-                         String coilID, String tonnage, String pageRefNo, String remarks) {
-        this.driverID = DriverID;
-        this.Date = date;
-        this.VehicleID = vehicleNo;
-        this.From_Place = from;
-        this.To_Place = to;
-        this.CoilID = coilID;
-        this.Tonnage = tonnage;
-        this.PagerefNo = pageRefNo;
+    public PostDataModel(String driverName, String date, String vehicleNo, String from, String to, String coilID, String tonnage, String pageRefNo, String remarks) {
+        this.driverName = driverName;
+        this.date = date;
+        this.vehicleNo = vehicleNo;
+        this.from = from;
+        this.to = to;
+        this.coilID = coilID;
+        this.tonnage = tonnage;
+        this.pageRefNo = pageRefNo;
         this.remarks = remarks;
     }
 
-    public int getDriverID() {
-        return driverID;
+    public String getDriverName() {
+        return driverName;
     }
 
-    public void setDriverID(int driverID) {
-        this.driverID = driverID;
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
     }
 
     public String getDate() {
-        return Date;
+        return date;
     }
 
     public void setDate(String date) {
-        Date = date;
+        this.date = date;
     }
 
-    public int getVehicleID() {
-        return VehicleID;
+    public String getVehicleNo() {
+        return vehicleNo;
     }
 
-    public void setVehicleID(int vehicleID) {
-        VehicleID = vehicleID;
+    public void setVehicleNo(String vehicleNo) {
+        this.vehicleNo = vehicleNo;
     }
 
-    public String getFrom_Place() {
-        return From_Place;
+    public String getFrom() {
+        return from;
     }
 
-    public void setFrom_Place(String from_Place) {
-        From_Place = from_Place;
+    public void setFrom(String from) {
+        this.from = from;
     }
 
-    public String getTo_Place() {
-        return To_Place;
+    public String getTo() {
+        return to;
     }
 
-    public void setTo_Place(String to_Place) {
-        To_Place = to_Place;
+    public void setTo(String to) {
+        this.to = to;
     }
 
     public String getCoilID() {
-        return CoilID;
+        return coilID;
     }
 
     public void setCoilID(String coilID) {
-        CoilID = coilID;
+        this.coilID = coilID;
     }
 
     public String getTonnage() {
-        return Tonnage;
+        return tonnage;
     }
 
     public void setTonnage(String tonnage) {
-        Tonnage = tonnage;
+        this.tonnage = tonnage;
     }
 
-    public String getPagerefNo() {
-        return PagerefNo;
+    public String getPageRefNo() {
+        return pageRefNo;
     }
 
-    public void setPagerefNo(String pagerefNo) {
-        PagerefNo = pagerefNo;
+    public void setPageRefNo(String pageRefNo) {
+        this.pageRefNo = pageRefNo;
     }
 
     public String getRemarks() {

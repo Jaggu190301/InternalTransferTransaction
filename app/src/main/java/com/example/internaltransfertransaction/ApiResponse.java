@@ -3,32 +3,12 @@ package com.example.internaltransfertransaction;
 import com.google.gson.annotations.SerializedName;
 
 public class ApiResponse {
-    @SerializedName("status")
-    private String status;
+  private String message;
 
-    @SerializedName("message")
-    private String message;
-
-    // Constructors, getters, and setters
-
-    public ApiResponse(String status, String message) {
-        this.status = status;
+    public ApiResponse(String message) {
         this.message = message;
     }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getMessage() {
         return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

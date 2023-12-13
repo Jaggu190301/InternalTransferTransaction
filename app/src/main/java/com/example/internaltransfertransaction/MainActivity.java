@@ -13,7 +13,10 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -22,8 +25,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.HttpException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -72,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                submitButton.setEnabled(false);
                 displayInputValues();
             }
         });
@@ -109,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<com.example.internaltransfertransaction.Location>> call, Throwable t) {
-                Log.e("MainActivity", "API request failed", t);
+                Log.e("MainActivity", "API request failed to Get Location", t);
             }
         });
     }
@@ -148,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<Vehicle>> call, Throwable t) {
-                Log.e("MainActivity", "API request failed", t);
+                Log.e("MainActivity", "API request failed to get Vehicle", t);
             }
         });
     }
@@ -181,13 +188,15 @@ public class MainActivity extends AppCompatActivity {
                     // Set the adapter for the MaterialAutoCompleteTextView
                     driverNameAutoCompleteTextView.setAdapter(adapter);
                 } else {
-                    Log.e("MainActivity", "Failed to fetch driver names from API");
+                    Log.e("MainActivity", "Failed to fetch driver names from API"+response.code() + ", Message: " + response.message());
+
+
                 }
             }
 
             @Override
             public void onFailure(Call<List<Driver>> call, Throwable t) {
-                Log.e("MainActivity", "API request failed", t);
+                Log.e("MainActivity", "API request failed to get DriverName", t);
             }
         });
     }
@@ -212,56 +221,46 @@ public class MainActivity extends AppCompatActivity {
         String pageRefNoValue = pageRefNo.getText().toString();
         String remarksValue = remarks.getText().toString();
 
-        int driverId = driverIds.get(selectedDriverName);
-        int vehicleId = vehicleIds.get(VehicleNo);
+        String driverId = String.valueOf(driverIds.get(selectedDriverName));
+        String vehicleId =  String.valueOf(vehicleIds.get(VehicleNo));
 
-       //Create Retrofit Instance
-        Retrofit retrofit=new Retrofit.Builder()
+        // Create Retrofit instance for the submit API
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://external.balajitransports.in/api/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                                .build();
-        // Create an instance of the ApiService interface
-        ApiService apiService = retrofit.create(ApiService.class);
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        // Create an instance of the data model for the POST request
-        PostDataModel postData = new PostDataModel(
-                driverId,
-                dateValue,
-                vehicleId,
-                fromValue,
-                toValue,
-                coilIDValue,
-                tonnageValue,
-                pageRefNoValue,
-                remarksValue
-        );
+
+        ApiService apiService = retrofit.create(ApiService.class);
+        PostDataModel postDataModel=new PostDataModel(driverId,dateValue,vehicleId,fromValue,toValue,coilIDValue,tonnageValue,pageRefNoValue,remarksValue);
 
         // Make the POST request
-        Call<ApiResponse> call = apiService.postData(postData);
-
-        call.enqueue(new Callback<ApiResponse>() {
+       Call<ResponseBody> call=apiService.postData(postDataModel);
+        call.enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                submitButton.setEnabled(true);
+
                 if (response.isSuccessful() && response.body() != null) {
-                    // Handle the successful response
-                    ApiResponse apiResponse = response.body();
-                    Toast.makeText(MainActivity.this, "Data submitted successfully: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    try {
+                        String successMessage = response.body().string();
+                        Log.d("MainActivity", "Response: " + successMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
-                    // Handle the error response
-                    Log.e("MainActivity", "Failed to submit data to API");
-                    Log.e("MainActivity", "Response Error: " + response.errorBody());
-                    Toast.makeText(MainActivity.this, "Failed to submit data", Toast.LENGTH_SHORT).show();
+                    Log.e("MainActivity", "Failed to get a successful response");
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse> call, Throwable t) {
-                Log.e("MainActivity", "API request failed", t);
-                Toast.makeText(MainActivity.this, "API request failed", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                submitButton.setEnabled(true);
+
+                Log.e("MainActivity", "Failed to make a POST request", t);
+
             }
         });
-
-
 
         // Display values in the log
         Log.d("MainActivity", "Driver Name: " + selectedDriverName);
@@ -284,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
         pageRefNo.setText("");
         remarks.setText("");
     }
+
 
     public void showDatePicker(View view) {
         int year = calendar.get(Calendar.YEAR);
@@ -309,9 +309,21 @@ public class MainActivity extends AppCompatActivity {
 
     // Helper method to update the date TextInputEditText with the selected date
     private void updateDateEditText() {
-        String myFormat = "dd/MM/yyyy"; // Choose the desired date format
+        String myFormat = "yyyy/MM/dd"; // Choose the desired date format
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
 
         date.setText(sdf.format(calendar.getTime()));
     }
-}
+
+    private void handleErrorResponse(Response<ApiResponse> response) {
+        try {
+            String errorBody = response.errorBody().string();
+            Log.e("MainActivity", "Response Error: " + errorBody);
+            Toast.makeText(MainActivity.this, "Failed to submit data. Check logs for details.", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("MainActivity", "Error reading error response", e);
+            Toast.makeText(MainActivity.this, "Failed to read error response", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    }
