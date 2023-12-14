@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, Integer> vehicleIds = new HashMap<>();
     private Button submitButton;
 
+    private Button RowAdd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         submitButton = findViewById(R.id.Submit);
+        RowAdd = findViewById(R.id.Add);
 
         fetchDriverNames();
 
@@ -82,6 +85,16 @@ public class MainActivity extends AppCompatActivity {
                 displayInputValues();
             }
         });
+
+        RowAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ClearInput();
+                RowAdd.setEnabled(false);
+            }
+        });
+
+
     }
 
     private void fetchLocation(){
@@ -245,6 +258,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         String successMessage = response.body().string();
                         Log.d("MainActivity", "Response: " + successMessage);
+                        Toast.makeText(MainActivity.this,successMessage,Toast.LENGTH_LONG).show();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -282,6 +296,79 @@ public class MainActivity extends AppCompatActivity {
         tonnage.setText("");
         pageRefNo.setText("");
         remarks.setText("");
+    }
+
+    public void ClearInput(){
+
+        String selectedDriverName = driverNameAutoCompleteTextView.getText().toString();
+        String dateValue = date.getText().toString();
+        String VehicleNo = VehicleNumAutoComplete.getText().toString();
+        String fromValue = from.getText().toString();
+        String toValue = to.getText().toString();
+        String coilIDValue = coilID.getText().toString();
+        String tonnageValue = tonnage.getText().toString();
+        String pageRefNoValue = pageRefNo.getText().toString();
+        String remarksValue = remarks.getText().toString();
+
+        String driverId = String.valueOf(driverIds.get(selectedDriverName));
+        String vehicleId =  String.valueOf(vehicleIds.get(VehicleNo));
+
+        // Create Retrofit instance for the submit API
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://external.balajitransports.in/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+
+        ApiService apiService = retrofit.create(ApiService.class);
+        PostDataModel postDataModel=new PostDataModel(driverId,dateValue,vehicleId,fromValue,toValue,coilIDValue,tonnageValue,pageRefNoValue,remarksValue);
+
+        // Make the POST request
+        Call<ResponseBody> call=apiService.postData(postDataModel);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                submitButton.setEnabled(true);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String successMessage = response.body().string();
+                        Log.d("MainActivity", "Response: " + successMessage);
+                        Toast.makeText(MainActivity.this,successMessage,Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("MainActivity", "Failed to get a successful response");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                submitButton.setEnabled(true);
+
+                Log.e("MainActivity", "Failed to make a POST request", t);
+
+            }
+        });
+
+        // Display values in the log
+        Log.d("MainActivity", "Driver Name: " + selectedDriverName);
+        Log.d("MainActivity", "Date: " + dateValue);
+        Log.d("MainActivity", "Date: " + VehicleNo);
+        Log.d("MainActivity", "From: " + fromValue);
+        Log.d("MainActivity", "To: " + toValue);
+        Log.d("MainActivity", "Coil ID: " + coilIDValue);
+        Log.d("MainActivity", "Tonnage: " + tonnageValue);
+        Log.d("MainActivity", "Page Ref No: " + pageRefNoValue);
+        Log.d("MainActivity", "Remarks: " + remarksValue);
+
+
+        coilID.setText("");
+        tonnage.setText("");
+        pageRefNo.setText("");
+        remarks.setText("");
+
     }
 
 

@@ -132,16 +132,19 @@
                     android:id="@+id/Remarks"/>
             </com.google.android.material.textfield.TextInputLayout>
             <Button
+                android:id="@+id/Add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+"
+                android:layout_margin="10dp"
+                android:backgroundTint="@color/design_default_color_primary"/>
+            <Button
                 android:id="@+id/Submit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Submit"
                 android:layout_margin="10dp"
                 android:backgroundTint="@color/colorAccent"/>
-
-
-
-
 
 
 
