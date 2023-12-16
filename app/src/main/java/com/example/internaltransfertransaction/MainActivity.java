@@ -4,15 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -39,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private MaterialAutoCompleteTextView  from, to, driverNameAutoCompleteTextView, VehicleNumAutoComplete;
 
     private Calendar calendar;
+
+    private LinearLayout containerLayout;
 
     private List<String> driverNames = new ArrayList<>();
     private List<String> VehicleNo = new ArrayList<>();
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         submitButton = findViewById(R.id.Submit);
         RowAdd = findViewById(R.id.Add);
+        containerLayout = findViewById(R.id.containerLayout);
 
         fetchDriverNames();
 
@@ -89,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
         RowAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ClearInput();
-                RowAdd.setEnabled(false);
+                addNewSetOfFields();
             }
         });
 
@@ -298,79 +303,59 @@ public class MainActivity extends AppCompatActivity {
         remarks.setText("");
     }
 
-    public void ClearInput(){
+    private void addNewSetOfFields(){
+        for (int i = 0; i < 4; i++) {
+            // Create TextInputLayout
 
-        String selectedDriverName = driverNameAutoCompleteTextView.getText().toString();
-        String dateValue = date.getText().toString();
-        String VehicleNo = VehicleNumAutoComplete.getText().toString();
-        String fromValue = from.getText().toString();
-        String toValue = to.getText().toString();
-        String coilIDValue = coilID.getText().toString();
-        String tonnageValue = tonnage.getText().toString();
-        String pageRefNoValue = pageRefNo.getText().toString();
-        String remarksValue = remarks.getText().toString();
+            TextInputLayout textInputLayout = new TextInputLayout(this);
+            LinearLayout.LayoutParams textInputLayoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            textInputLayoutParams.setMargins(10, 0, 10, 0);
+            textInputLayout.setLayoutParams(textInputLayoutParams);
 
-        String driverId = String.valueOf(driverIds.get(selectedDriverName));
-        String vehicleId =  String.valueOf(vehicleIds.get(VehicleNo));
+            // Create TextInputEditText
+            TextInputEditText textInputEditText = new TextInputEditText(this);
+            textInputEditText.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            textInputEditText.setInputType(InputType.TYPE_CLASS_TEXT);
 
-        // Create Retrofit instance for the submit API
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://external.balajitransports.in/api/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-
-        ApiService apiService = retrofit.create(ApiService.class);
-        PostDataModel postDataModel=new PostDataModel(driverId,dateValue,vehicleId,fromValue,toValue,coilIDValue,tonnageValue,pageRefNoValue,remarksValue);
-
-        // Make the POST request
-        Call<ResponseBody> call=apiService.postData(postDataModel);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                submitButton.setEnabled(true);
-
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String successMessage = response.body().string();
-                        Log.d("MainActivity", "Response: " + successMessage);
-                        Toast.makeText(MainActivity.this,successMessage,Toast.LENGTH_LONG).show();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.e("MainActivity", "Failed to get a successful response");
-                }
+            // Set hint based on the iteration
+            switch (i) {
+                case 0:
+                    textInputLayout.setHint("CoilID");
+                    textInputEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.baseline_book_24, 0);
+                    textInputEditText.setId(View.generateViewId());
+                    break;
+                case 1:
+                    textInputLayout.setHint("PageRefNo");
+                    textInputEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.baseline_book_24, 0);
+                    textInputEditText.setId(View.generateViewId());
+                    break;
+                case 2:
+                    textInputLayout.setHint("Tonnage");
+                    textInputEditText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    textInputEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.baseline_book_24, 0);
+                    textInputEditText.setId(View.generateViewId());
+                    break;
+                case 3:
+                    textInputLayout.setHint("Remarks");
+                    textInputEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.baseline_book_24, 0);
+                    textInputEditText.setId(View.generateViewId());
+                    break;
             }
 
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                submitButton.setEnabled(true);
+            // Add TextInputEditText to TextInputLayout
+            textInputLayout.addView(textInputEditText);
 
-                Log.e("MainActivity", "Failed to make a POST request", t);
-
-            }
-        });
-
-        // Display values in the log
-        Log.d("MainActivity", "Driver Name: " + selectedDriverName);
-        Log.d("MainActivity", "Date: " + dateValue);
-        Log.d("MainActivity", "Date: " + VehicleNo);
-        Log.d("MainActivity", "From: " + fromValue);
-        Log.d("MainActivity", "To: " + toValue);
-        Log.d("MainActivity", "Coil ID: " + coilIDValue);
-        Log.d("MainActivity", "Tonnage: " + tonnageValue);
-        Log.d("MainActivity", "Page Ref No: " + pageRefNoValue);
-        Log.d("MainActivity", "Remarks: " + remarksValue);
-
-
-        coilID.setText("");
-        tonnage.setText("");
-        pageRefNo.setText("");
-        remarks.setText("");
+            // Add TextInputLayout to the container layout
+            containerLayout.addView(textInputLayout);
+        }
 
     }
-
 
     public void showDatePicker(View view) {
         int year = calendar.get(Calendar.YEAR);
